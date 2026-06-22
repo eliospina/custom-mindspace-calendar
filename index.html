@@ -87,6 +87,36 @@
             border-color: #52525b;
         }
 
+        .auth-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        #beta-access {
+            font-size: 12px;
+            font-weight: 500;
+            color: #52525b;
+            text-decoration: none;
+            padding: 7px 10px;
+            border-radius: 999px;
+            border: 1px solid #e4e4e7;
+            background: #fff;
+            white-space: nowrap;
+        }
+        #beta-access:hover { color: #18181b; border-color: #a1a1aa; }
+        body.is-connected #beta-access { display: none; }
+
+        .auth-hint {
+            font-size: 11px;
+            color: #71717a;
+            text-align: center;
+            margin: 0;
+            padding: 0 16px 8px;
+            line-height: 1.4;
+        }
+        body.is-connected .auth-hint { display: none; }
+
         .style-bar {
             padding: 0 16px 10px;
         }
@@ -221,8 +251,13 @@
                     <p id="header-sub" class="brand-sub">Choose your calendar skin</p>
                 </div>
             </div>
-            <button type="button" id="auth-btn">Sign in</button>
+            <div class="auth-actions">
+                <a id="beta-access" href="#">Request access</a>
+                <button type="button" id="auth-btn">Sign in</button>
+            </div>
         </header>
+
+        <p class="auth-hint">All skins work without sign-in · Sign in loads your Google Calendar (beta)</p>
 
         <div class="style-bar">
             <div id="style-picker"></div>

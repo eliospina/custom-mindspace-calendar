@@ -20,6 +20,21 @@ const stylePicker = document.getElementById('style-picker');
 const authBtn = document.getElementById('auth-btn');
 const statusMsg = document.getElementById('status-msg');
 const headerSub = document.getElementById('header-sub');
+const betaAccessLink = document.getElementById('beta-access');
+
+const DEFAULT_BETA_URL = 'https://github.com/eliospina/custom-mindspace-calendar/issues/new?template=beta_access.md&labels=beta-access';
+
+function getBetaAccessUrl() {
+    const url = window.GOOGLE_CONFIG?.BETA_ACCESS_URL?.trim();
+    return url || DEFAULT_BETA_URL;
+}
+
+function getGoogleConfig() {
+    const config = window.GOOGLE_CONFIG;
+    if (!config?.CLIENT_ID || !config?.API_KEY) return null;
+    if (config.CLIENT_ID.includes('YOUR_CLIENT_ID') || config.API_KEY.includes('YOUR_API_KEY')) return null;
+    return config;
+}
 
 function isSignedIn() {
     try {
@@ -46,19 +61,15 @@ function updateChrome() {
     if (connected && statusMsg && !statusMsg.classList.contains('is-error')) {
         setStatus('');
     }
+    if (betaAccessLink && !connected) {
+        betaAccessLink.href = getBetaAccessUrl();
+    }
 }
 
 function todayAt(h, m) {
     const d = new Date();
     d.setHours(h, m, 0, 0);
     return d.toISOString();
-}
-
-function getGoogleConfig() {
-    const config = window.GOOGLE_CONFIG;
-    if (!config?.CLIENT_ID || !config?.API_KEY) return null;
-    if (config.CLIENT_ID.includes('YOUR_CLIENT_ID') || config.API_KEY.includes('YOUR_API_KEY')) return null;
-    return config;
 }
 
 function escapeHtml(text) {
@@ -247,7 +258,8 @@ function initializeGoogleAPIs() {
 async function handleAuthCallback(res) {
     if (res.error) {
         if (res.error === 'access_denied') {
-            setStatus('Sign-in blocked. Your Gmail must be on the OAuth test user list.', true);
+            setStatus('Sign-in blocked — request beta access, then retry after approval.', true);
+            if (betaAccessLink) betaAccessLink.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         } else {
             setStatus(`Could not sign in (${res.error}).`, true);
         }

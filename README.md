@@ -62,12 +62,29 @@ Mindspace Calendar exists at that intersection: **a modern, user-chosen interfac
 3. Tap **Sign in** to load your real Google Calendar events (read-only).
 4. Switch themes and watch the same schedule transform.
 
-### Want to test Sign in?
+### Want to test Sign in? (Beta access)
 
-Skins work without signing in. **Sign in** requires your Gmail on the OAuth allowlist (Testing mode).
+**Skins work for everyone without signing in.** Sign in is optional — it loads your real Google Calendar (read-only).
 
-- Open an [issue](https://github.com/eliospina/custom-mindspace-calendar/issues/new/choose) with your Gmail, or
-- Join the beta Google Group *(link coming soon)*.
+We use **OAuth Testing mode** (up to 100 users). No full Google verification required.
+
+**For visitors:**
+1. Tap **Request access** on the demo (or [open a GitHub issue](https://github.com/eliospina/custom-mindspace-calendar/issues/new?template=beta_access.md))
+2. Share your Gmail
+3. After approval, tap **Sign in**
+
+**For maintainers — set up a Google Group (recommended):**
+
+1. Create a group at [groups.google.com](https://groups.google.com) (e.g. `mindspace-beta@googlegroups.com`)
+2. Settings → **Who can join** → *Anyone can ask*
+3. [OAuth consent screen → Test users](https://console.cloud.google.com/auth/audience?project=custom-mindspace-calendar) → add the **group email**
+4. Set `BETA_ACCESS_URL` in Vercel (or `config.js` locally) to the group join link:
+
+```
+https://groups.google.com/g/your-group-name
+```
+
+Redeploy — the **Request access** button on the site will point to your group.
 
 ---
 
@@ -119,7 +136,13 @@ Keep the app in **Testing** mode and add each Gmail under **OAuth consent screen
 
 ### Deploy on Vercel
 
-Every push to `main` auto-deploys. Set `GOOGLE_CLIENT_ID` and `GOOGLE_API_KEY` in the Vercel dashboard.
+Every push to `main` auto-deploys. Set in the Vercel dashboard:
+
+| Variable | Value |
+|----------|-------|
+| `GOOGLE_CLIENT_ID` | OAuth Web client ID |
+| `GOOGLE_API_KEY` | Restricted API key |
+| `BETA_ACCESS_URL` | *(optional)* Google Group join URL for **Request access** button |
 
 ---
 
