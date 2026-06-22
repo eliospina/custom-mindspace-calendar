@@ -20,46 +20,8 @@ const stylePicker = document.getElementById('style-picker');
 const authBtn = document.getElementById('auth-btn');
 const statusMsg = document.getElementById('status-msg');
 const headerSub = document.getElementById('header-sub');
-const earlyAccessPanel = document.getElementById('early-access');
-const earlyAccessForm = document.getElementById('early-access-form');
-const waitlistEmailInput = document.getElementById('waitlist-email');
-const earlyAccessDone = document.getElementById('early-access-done');
 
-const WAITLIST_KEY = 'mindspace_waitlist_email';
-const EARLY_ACCESS_REPO = 'https://github.com/eliospina/custom-mindspace-calendar/issues/new';
-
-function getBetaAccessUrl(email = '') {
-    const custom = window.GOOGLE_CONFIG?.BETA_ACCESS_URL?.trim();
-    if (custom) return custom;
-    const title = encodeURIComponent(email ? `Early access: ${email}` : 'Early access: ');
-    const body = encodeURIComponent(
-        email
-            ? `**Gmail:** ${email}\n\nI want to try Mindspace with my real Google Calendar.\n\nDemo in progress · first users list.`
-            : '**Gmail:** \n\nI want to try Mindspace with my real Google Calendar.',
-    );
-    return `${EARLY_ACCESS_REPO}?template=early_access.md&title=${title}&body=${body}&labels=early-access`;
-}
-
-function showWaitlistDone(email) {
-    if (!earlyAccessPanel || !earlyAccessDone) return;
-    earlyAccessPanel.classList.add('is-done');
-    earlyAccessDone.textContent = `You're on the list (${email}). We'll enable sign-in for you soon — then tap Sign in above.`;
-}
-
-function initWaitlist() {
-    const saved = localStorage.getItem(WAITLIST_KEY);
-    if (saved) showWaitlistDone(saved);
-
-    earlyAccessForm?.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const email = waitlistEmailInput?.value?.trim();
-        if (!email) return;
-        localStorage.setItem(WAITLIST_KEY, email);
-        window.open(getBetaAccessUrl(email), '_blank', 'noopener');
-        showWaitlistDone(email);
-        setStatus('Confirm your request on GitHub — then we add your Gmail.');
-    });
-}
+const TOKEN_STORAGE_KEY = 'mindspace_gcal_token';
 
 function saveSessionToken(token) {
     if (token?.access_token) {
@@ -87,8 +49,6 @@ function applySessionToken() {
     gapi.client.setToken(token);
     return true;
 }
-
-const TOKEN_STORAGE_KEY = 'mindspace_gcal_token';
 
 function getGoogleConfig() {
     const config = window.GOOGLE_CONFIG;
@@ -119,7 +79,7 @@ function updateChrome() {
         const theme = CALENDAR_STYLES[activeStyleId]?.label || 'Calendar';
         headerSub.textContent = connected
             ? `${theme} · Google Calendar`
-            : 'In progress · Skins ready now';
+            : 'Pick your calendar skin';
     }
     if (connected && statusMsg && !statusMsg.classList.contains('is-error')) {
         setStatus('');
@@ -339,8 +299,7 @@ function initializeGoogleAPIs() {
 async function handleAuthCallback(res) {
     if (res.error) {
         if (res.error === 'access_denied') {
-            setStatus('Not on the list yet — join below, then try Sign in after we add you.', true);
-            earlyAccessPanel?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            setStatus('OAuth not enabled on this demo — fork the repo to connect your calendar.', true);
         } else {
             setStatus(`Could not sign in (${res.error}).`, true);
         }
@@ -386,7 +345,7 @@ async function fetchEvents() {
     renderPhone();
 }
 
-authBtn.addEventListener('click', () => {
+authBtn?.addEventListener('click', () => {
     if (!getGoogleConfig()) { setStatus('Google credentials not configured.', true); return; }
     if (!gapiInited || !tokenClient) { setStatus('Loading…'); return; }
     if (gapi.client.getToken() === null) {
@@ -417,6 +376,5 @@ window.addEventListener('DOMContentLoaded', () => {
     renderStylePicker();
     renderPhone();
     updateChrome();
-    initWaitlist();
-    initializeGoogleAPIs();
+    if (authBtn) initializeGoogleAPIs();
 });

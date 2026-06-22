@@ -1,6 +1,6 @@
 import { writeFileSync, mkdirSync, copyFileSync, existsSync } from 'fs';
 
-const { GOOGLE_CLIENT_ID, GOOGLE_API_KEY, BETA_ACCESS_URL } = process.env;
+const { GOOGLE_CLIENT_ID, GOOGLE_API_KEY } = process.env;
 
 mkdirSync('public', { recursive: true });
 
@@ -8,7 +8,6 @@ const configContent = GOOGLE_CLIENT_ID && GOOGLE_API_KEY
     ? `window.GOOGLE_CONFIG = {
     CLIENT_ID: '${GOOGLE_CLIENT_ID}',
     API_KEY: '${GOOGLE_API_KEY}',
-    BETA_ACCESS_URL: '${(BETA_ACCESS_URL || '').replace(/'/g, "\\'")}',
 };
 `
     : null;

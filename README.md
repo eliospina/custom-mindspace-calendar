@@ -57,26 +57,29 @@ Mindspace Calendar exists at that intersection: **a modern, user-chosen interfac
 
 ## Live demo
 
+**Try every skin — no sign-in, no registration, no data collected.**
+
 1. Pick a skin in the theme bar.
 2. Use **‹ ›** to browse past and future months.
-3. Tap **Sign in** to load your real Google Calendar events (read-only).
-4. Switch themes and watch the same schedule transform.
+3. Switch themes and compare the same month in different aesthetics.
 
-### First users (sign-in)
+The live site is a **visual proposal only**. Sample events are labeled *preview*.
 
-**Skins work for everyone — no list, no sign-in.**
+### Connect your real calendar
 
-Sign-in is optional and limited while the demo is in progress (Google OAuth Testing mode, ~100 spots).
+This is **open source** — not a hosted service. To load your Google Calendar:
 
-**For visitors:**
-1. Enter Gmail in **Join list** on the demo
-2. Confirm the pre-filled GitHub issue (one tap)
-3. Maintainer adds your Gmail in Google Cloud → Test users
-4. **Sign in** on the demo — usually within 24h
+1. [Fork or clone](https://github.com/eliospina/custom-mindspace-calendar) the repo
+2. Add your own `config.js` (see below)
+3. Add to `index.html` before `config.js`:
+   ```html
+   <script defer src="https://apis.google.com/js/api.js"></script>
+   <script defer src="https://accounts.google.com/gsi/client"></script>
+   ```
+   And a `<button type="button" id="auth-btn">Sign in</button>` in the header — OAuth code in `app.js` activates automatically.
+4. Run locally or deploy **your** fork with **your** Google Cloud credentials.
 
-**For you (maintainer):** watch [early-access issues](https://github.com/eliospina/custom-mindspace-calendar/issues?q=label%3Aearly-access), add Gmail in [Test users](https://console.cloud.google.com/auth/audience?project=custom-mindspace-calendar), close issue.
-
-Optional: set `BETA_ACCESS_URL` in Vercel to a Google Group join link.
+No maintainer approval, no waitlist, no manual onboarding.
 
 ---
 
@@ -132,9 +135,10 @@ Every push to `main` auto-deploys. Set in the Vercel dashboard:
 
 | Variable | Value |
 |----------|-------|
-| `GOOGLE_CLIENT_ID` | OAuth Web client ID |
-| `GOOGLE_API_KEY` | Restricted API key |
-| `BETA_ACCESS_URL` | *(optional)* Google Group join URL for **Request access** button |
+| `GOOGLE_CLIENT_ID` | OAuth Web client ID (your fork only) |
+| `GOOGLE_API_KEY` | Restricted API key (your fork only) |
+
+The public demo at `custom-mindspace-calendar.vercel.app` does **not** require these — it shows skins with sample events only.
 
 ---
 
