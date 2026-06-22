@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Mindspace Calendar · Prototype 2</title>
+    <meta name="description" content="Prototype 2 — mobile calendar personalization. Pick a style or your own image. Open-source proposal for Google Calendar.">
+    <meta name="theme-color" content="#1a73e8">
+    <meta property="og:title" content="Mindspace Calendar · Prototype 2">
+    <meta property="og:description" content="Mobile calendar personalization — swappable styles and custom month images.">
+    <meta property="og:type" content="website">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.cdnfonts.com/css/star-jedi" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Roboto', system-ui, sans-serif;
+            background: #e8eaed;
+            margin: 0;
+            min-height: 100dvh;
+        }
+        .phone {
+            width: 100%;
+            max-width: 390px;
+            height: 780px;
+            max-height: calc(100dvh - 180px);
+            background: #000;
+            border-radius: 44px;
+            padding: 12px;
+            box-shadow: 0 25px 80px rgba(0,0,0,0.35), inset 0 0 0 2px #333;
+            margin: 0 auto;
+        }
+        .phone-inner {
+            width: 100%;
+            height: 100%;
+            border-radius: 34px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        .phone-notch {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 28px;
+            background: #000;
+            border-radius: 0 0 18px 18px;
+            z-index: 30;
+        }
+        .style-chip {
+            flex-shrink: 0;
+            width: 72px;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            padding: 6px;
+            cursor: pointer;
+            background: #fff;
+            transition: transform 0.15s, border-color 0.15s;
+        }
+        .style-chip:active { transform: scale(0.95); }
+        .style-chip.selected { border-color: #1a73e8; }
+        .style-chip-swatch {
+            height: 44px;
+            border-radius: 4px;
+            margin-bottom: 4px;
+        }
+        .google-blob-hero {
+            background: linear-gradient(135deg, #aed581, #fff176, #ff8a65, #4fc3f7);
+            position: relative;
+            overflow: hidden;
+        }
+        .google-blob-hero::before,
+        .google-blob-hero::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(2px);
+        }
+        .google-blob-hero::before {
+            width: 140px; height: 140px;
+            background: #81c784;
+            top: 20px; left: -30px;
+            opacity: 0.8;
+        }
+        .google-blob-hero::after {
+            width: 100px; height: 100px;
+            background: #ffb74d;
+            top: 50px; right: 20px;
+            opacity: 0.9;
+        }
+        #phone-screen { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+        .cal-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        .cal-scroll::-webkit-scrollbar { display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="px-4 pt-4 pb-2 max-w-lg mx-auto">
+        <div class="flex items-center justify-between gap-3 mb-3">
+            <div>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <h1 class="text-base font-medium text-gray-800" style="font-family:'Google Sans',Roboto,sans-serif">Mindspace Calendar</h1>
+                    <span class="text-[10px] font-semibold uppercase tracking-wide text-white bg-[#1a73e8] px-2 py-0.5 rounded-full">Prototype 2</span>
+                </div>
+                <p class="text-xs text-gray-500">Nerd themes · Pick your calendar skin</p>
+            </div>
+            <button id="auth-btn" class="text-xs font-medium text-white bg-[#1a73e8] px-3 py-1.5 rounded-full shrink-0">Connect</button>
+        </div>
+
+        <div id="style-picker" class="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1"></div>
+    </div>
+
+    <div class="phone mx-auto">
+        <div class="phone-inner">
+            <div class="phone-notch"></div>
+            <div id="phone-screen"></div>
+        </div>
+    </div>
+
+    <p id="status-msg" class="text-center text-xs text-gray-500 px-4 pb-4 max-w-lg mx-auto"></p>
+
+    <script defer src="https://apis.google.com/js/api.js"></script>
+    <script defer src="https://accounts.google.com/gsi/client"></script>
+    <script defer src="config.js"></script>
+    <script defer src="styles.js"></script>
+    <script defer src="app.js"></script>
+</body>
+</html>

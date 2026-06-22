@@ -1,0 +1,4 @@
+{
+  "buildCommand": "node scripts/generate-config.mjs",
+  "outputDirectory": "public"
+}
