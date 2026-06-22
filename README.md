@@ -62,29 +62,21 @@ Mindspace Calendar exists at that intersection: **a modern, user-chosen interfac
 3. Tap **Sign in** to load your real Google Calendar events (read-only).
 4. Switch themes and watch the same schedule transform.
 
-### Want to test Sign in? (Beta access)
+### First users (sign-in)
 
-**Skins work for everyone without signing in.** Sign in is optional — it loads your real Google Calendar (read-only).
+**Skins work for everyone — no list, no sign-in.**
 
-We use **OAuth Testing mode** (up to 100 users). No full Google verification required.
+Sign-in is optional and limited while the demo is in progress (Google OAuth Testing mode, ~100 spots).
 
 **For visitors:**
-1. Tap **Request access** on the demo (or [open a GitHub issue](https://github.com/eliospina/custom-mindspace-calendar/issues/new?template=beta_access.md))
-2. Share your Gmail
-3. After approval, tap **Sign in**
+1. Enter Gmail in **Join list** on the demo
+2. Confirm the pre-filled GitHub issue (one tap)
+3. Maintainer adds your Gmail in Google Cloud → Test users
+4. **Sign in** on the demo — usually within 24h
 
-**For maintainers — set up a Google Group (recommended):**
+**For you (maintainer):** watch [early-access issues](https://github.com/eliospina/custom-mindspace-calendar/issues?q=label%3Aearly-access), add Gmail in [Test users](https://console.cloud.google.com/auth/audience?project=custom-mindspace-calendar), close issue.
 
-1. Create a group at [groups.google.com](https://groups.google.com) (e.g. `mindspace-beta@googlegroups.com`)
-2. Settings → **Who can join** → *Anyone can ask*
-3. [OAuth consent screen → Test users](https://console.cloud.google.com/auth/audience?project=custom-mindspace-calendar) → add the **group email**
-4. Set `BETA_ACCESS_URL` in Vercel (or `config.js` locally) to the group join link:
-
-```
-https://groups.google.com/g/your-group-name
-```
-
-Redeploy — the **Request access** button on the site will point to your group.
+Optional: set `BETA_ACCESS_URL` in Vercel to a Google Group join link.
 
 ---
 

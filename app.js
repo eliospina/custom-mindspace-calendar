@@ -20,10 +20,46 @@ const stylePicker = document.getElementById('style-picker');
 const authBtn = document.getElementById('auth-btn');
 const statusMsg = document.getElementById('status-msg');
 const headerSub = document.getElementById('header-sub');
-const betaAccessLink = document.getElementById('beta-access');
+const earlyAccessPanel = document.getElementById('early-access');
+const earlyAccessForm = document.getElementById('early-access-form');
+const waitlistEmailInput = document.getElementById('waitlist-email');
+const earlyAccessDone = document.getElementById('early-access-done');
 
-const DEFAULT_BETA_URL = 'https://github.com/eliospina/custom-mindspace-calendar/issues/new?template=beta_access.md&labels=beta-access';
-const TOKEN_STORAGE_KEY = 'mindspace_gcal_token';
+const WAITLIST_KEY = 'mindspace_waitlist_email';
+const EARLY_ACCESS_REPO = 'https://github.com/eliospina/custom-mindspace-calendar/issues/new';
+
+function getBetaAccessUrl(email = '') {
+    const custom = window.GOOGLE_CONFIG?.BETA_ACCESS_URL?.trim();
+    if (custom) return custom;
+    const title = encodeURIComponent(email ? `Early access: ${email}` : 'Early access: ');
+    const body = encodeURIComponent(
+        email
+            ? `**Gmail:** ${email}\n\nI want to try Mindspace with my real Google Calendar.\n\nDemo in progress · first users list.`
+            : '**Gmail:** \n\nI want to try Mindspace with my real Google Calendar.',
+    );
+    return `${EARLY_ACCESS_REPO}?template=early_access.md&title=${title}&body=${body}&labels=early-access`;
+}
+
+function showWaitlistDone(email) {
+    if (!earlyAccessPanel || !earlyAccessDone) return;
+    earlyAccessPanel.classList.add('is-done');
+    earlyAccessDone.textContent = `You're on the list (${email}). We'll enable sign-in for you soon — then tap Sign in above.`;
+}
+
+function initWaitlist() {
+    const saved = localStorage.getItem(WAITLIST_KEY);
+    if (saved) showWaitlistDone(saved);
+
+    earlyAccessForm?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const email = waitlistEmailInput?.value?.trim();
+        if (!email) return;
+        localStorage.setItem(WAITLIST_KEY, email);
+        window.open(getBetaAccessUrl(email), '_blank', 'noopener');
+        showWaitlistDone(email);
+        setStatus('Confirm your request on GitHub — then we add your Gmail.');
+    });
+}
 
 function saveSessionToken(token) {
     if (token?.access_token) {
@@ -52,10 +88,7 @@ function applySessionToken() {
     return true;
 }
 
-function getBetaAccessUrl() {
-    const url = window.GOOGLE_CONFIG?.BETA_ACCESS_URL?.trim();
-    return url || DEFAULT_BETA_URL;
-}
+const TOKEN_STORAGE_KEY = 'mindspace_gcal_token';
 
 function getGoogleConfig() {
     const config = window.GOOGLE_CONFIG;
@@ -84,13 +117,12 @@ function updateChrome() {
     if (authBtn) authBtn.textContent = connected ? 'Sign out' : 'Sign in';
     if (headerSub) {
         const theme = CALENDAR_STYLES[activeStyleId]?.label || 'Calendar';
-        headerSub.textContent = connected ? `${theme} · Google Calendar` : 'Choose your calendar skin';
+        headerSub.textContent = connected
+            ? `${theme} · Google Calendar`
+            : 'In progress · Skins ready now';
     }
     if (connected && statusMsg && !statusMsg.classList.contains('is-error')) {
         setStatus('');
-    }
-    if (betaAccessLink && !connected) {
-        betaAccessLink.href = getBetaAccessUrl();
     }
 }
 
@@ -307,8 +339,8 @@ function initializeGoogleAPIs() {
 async function handleAuthCallback(res) {
     if (res.error) {
         if (res.error === 'access_denied') {
-            setStatus('Sign-in blocked — request an invite, then retry after approval.', true);
-            if (betaAccessLink) betaAccessLink.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            setStatus('Not on the list yet — join below, then try Sign in after we add you.', true);
+            earlyAccessPanel?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         } else {
             setStatus(`Could not sign in (${res.error}).`, true);
         }
@@ -385,5 +417,6 @@ window.addEventListener('DOMContentLoaded', () => {
     renderStylePicker();
     renderPhone();
     updateChrome();
+    initWaitlist();
     initializeGoogleAPIs();
 });

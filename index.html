@@ -95,19 +95,96 @@
             gap: 8px;
             flex-shrink: 0;
         }
-        #beta-access {
-            font-size: 12px;
-            font-weight: 500;
-            color: #52525b;
-            text-decoration: none;
-            padding: 7px 10px;
+
+        .demo-badge {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: #a16207;
+            background: #fef9c3;
+            border: 1px solid #fde047;
+            padding: 2px 7px;
             border-radius: 999px;
-            border: 1px solid #e4e4e7;
-            background: #fff;
             white-space: nowrap;
         }
-        #beta-access:hover { color: #18181b; border-color: #a1a1aa; }
-        body.is-connected #beta-access { display: none; }
+        body.is-connected .demo-badge {
+            color: #86efac;
+            background: #14532d;
+            border-color: #166534;
+        }
+
+        .early-access {
+            margin: 0 16px 10px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            background: #fff;
+            border: 1px solid #e4e4e7;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        body.is-connected .early-access,
+        .early-access.is-done { display: none; }
+
+        .early-access-title {
+            font-size: 13px;
+            font-weight: 500;
+            margin: 0 0 4px;
+            color: #18181b;
+        }
+        .early-access-copy {
+            font-size: 11px;
+            color: #71717a;
+            margin: 0 0 10px;
+            line-height: 1.45;
+        }
+        .early-access-form {
+            display: flex;
+            gap: 6px;
+        }
+        .early-access-form input {
+            flex: 1;
+            min-width: 0;
+            font-family: inherit;
+            font-size: 13px;
+            padding: 8px 10px;
+            border: 1px solid #e4e4e7;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        .early-access-form input:focus {
+            outline: none;
+            border-color: #a1a1aa;
+            background: #fff;
+        }
+        .early-access-form button {
+            font-family: inherit;
+            font-size: 12px;
+            font-weight: 500;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 8px;
+            background: #18181b;
+            color: #fff;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .early-access-note {
+            font-size: 10px;
+            color: #a1a1aa;
+            margin: 8px 0 0;
+            line-height: 1.4;
+        }
+        .early-access-done {
+            display: none;
+            font-size: 12px;
+            color: #15803d;
+            margin: 0;
+            line-height: 1.45;
+        }
+        .early-access.is-done .early-access-form,
+        .early-access.is-done .early-access-note,
+        .early-access.is-done .early-access-copy { display: none; }
+        .early-access.is-done .early-access-done { display: block; }
 
         .auth-hint {
             font-size: 11px;
@@ -249,18 +326,29 @@
         <header class="app-header">
             <div class="flex items-center gap-2.5 min-w-0">
                 <span class="sync-dot" aria-hidden="true"></span>
-                <div class="min-w-0">
+                <div class="min-w-0 flex items-center gap-2 flex-wrap">
                     <h1 class="brand-title">Mindspace</h1>
-                    <p id="header-sub" class="brand-sub">Choose your calendar skin</p>
+                    <span class="demo-badge">Demo</span>
                 </div>
+                <p id="header-sub" class="brand-sub">In progress · Skins ready now</p>
             </div>
             <div class="auth-actions">
-                <a id="beta-access" href="#" target="_blank" rel="noopener">Request invite</a>
                 <button type="button" id="auth-btn">Sign in</button>
             </div>
         </header>
 
-        <p class="auth-hint">Skins work without sign-in · Sign in = read-only Google Calendar · <a id="privacy-link" href="privacy.html" style="color:inherit">Privacy</a></p>
+        <section id="early-access" class="early-access" aria-labelledby="early-access-title">
+            <p id="early-access-title" class="early-access-title">First users — want your real calendar?</p>
+            <p class="early-access-copy">This is a working demo, not a finished app. Skins work for everyone; we're manually onboarding sign-in for early testers.</p>
+            <form id="early-access-form" class="early-access-form">
+                <input type="email" id="waitlist-email" name="email" placeholder="your@gmail.com" autocomplete="email" required>
+                <button type="submit">Join list</button>
+            </form>
+            <p class="early-access-note">Submit your Gmail → we add you to Google OAuth (usually within 24h). Read-only · <a href="privacy.html" style="color:inherit">Privacy</a></p>
+            <p class="early-access-done" id="early-access-done"></p>
+        </section>
+
+        <p class="auth-hint">Try every skin below — no account needed</p>
 
         <div class="style-bar">
             <div id="style-picker"></div>
