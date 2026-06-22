@@ -21,6 +21,7 @@ let gisInited = false;
 let activeStyleId = 'minimal';
 let liveEvents = null;
 let usingLiveEvents = false;
+let viewDate = new Date();
 
 const phoneScreen = document.getElementById('phone-screen');
 const stylePicker = document.getElementById('style-picker');
@@ -52,10 +53,10 @@ function formatEventTime(start) {
     return new Date(start.dateTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 }
 
-function getMonthGrid() {
+function getMonthGrid(date = viewDate) {
+    const year = date.getFullYear();
+    const month = date.getMonth();
     const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth();
     const first = new Date(year, month, 1);
     const last = new Date(year, month + 1, 0);
     const startPad = (first.getDay() + 6) % 7;
@@ -64,13 +65,29 @@ function getMonthGrid() {
         days.push({ day: new Date(year, month, -startPad + i + 1).getDate(), current: false });
     }
     for (let d = 1; d <= last.getDate(); d++) {
-        days.push({ day: d, current: true, isToday: d === now.getDate() });
+        days.push({
+            day: d,
+            current: true,
+            isToday: d === now.getDate() && month === now.getMonth() && year === now.getFullYear(),
+        });
     }
     while (days.length % 7 !== 0) {
         days.push({ day: days.length - last.getDate() - startPad + 1, current: false });
     }
     const monthLabel = first.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
     return { days, monthLabel: monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1) };
+}
+
+function monthRange(date = viewDate) {
+    const start = new Date(date.getFullYear(), date.getMonth(), 1);
+    const end = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999);
+    return { timeMin: start.toISOString(), timeMax: end.toISOString() };
+}
+
+function changeMonth(delta) {
+    viewDate = new Date(viewDate.getFullYear(), viewDate.getMonth() + delta, 1);
+    if (usingLiveEvents && gapiInited) fetchEvents();
+    else renderPhone();
 }
 
 function starDots() {
@@ -126,7 +143,9 @@ function renderPhone() {
 
     const s = CALENDAR_STYLES[activeStyleId] || CALENDAR_STYLES.minimal;
     const { days, monthLabel } = getMonthGrid();
-    const events = liveEvents || SAMPLE_EVENTS;
+    const now = new Date();
+    const isCurrentMonth = viewDate.getMonth() === now.getMonth() && viewDate.getFullYear() === now.getFullYear();
+    const events = liveEvents || (isCurrentMonth ? SAMPLE_EVENTS : []);
     const monthName = monthLabel.split(' ')[0];
     const font = s.font;
     const titleFont = s.titleFont || font;
@@ -135,9 +154,9 @@ function renderPhone() {
     phoneScreen.innerHTML = `
     <div style="display:flex;flex-direction:column;height:100%;position:relative;font-family:${font}">
         <div style="background:${s.appBar};color:${s.appBarText};padding:36px 16px 10px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;border-bottom:1px solid ${s.navBorder}">
-            <button style="background:none;border:none;color:${s.appBarText};font-size:20px;padding:4px">☰</button>
+            <button type="button" data-action="prev-month" style="background:none;border:none;color:${s.appBarText};font-size:22px;padding:4px 8px;line-height:1" aria-label="Previous month">‹</button>
             <span style="font-family:${titleFont};font-size:${isSw ? '20px' : '18px'};letter-spacing:${isSw ? '0.06em' : 'normal'};text-shadow:${isSw ? '0 0 8px rgba(255,232,31,0.5)' : 'none'}">${monthName.toUpperCase()}</span>
-            <button style="background:none;border:none;color:${s.appBarText};font-size:20px;padding:4px">🔍</button>
+            <button type="button" data-action="next-month" style="background:none;border:none;color:${s.appBarText};font-size:22px;padding:4px 8px;line-height:1" aria-label="Next month">›</button>
         </div>
         ${renderHero(s.heroType, s, monthLabel)}
         <div class="cal-scroll" style="background:${s.body};flex:1">
@@ -153,15 +172,15 @@ function renderPhone() {
                 </div>
             </div>
             <div style="padding:8px 16px 16px">
-                <p style="font-family:${titleFont};font-size:${isSw ? '13px' : '11px'};font-weight:500;color:${s.weekday};margin:8px 0 10px;letter-spacing:${isSw ? '0.12em' : '0.5px'};text-transform:uppercase">${isSw ? 'Upcoming missions' : 'Upcoming'}</p>
-                ${events.map(ev => `
+                <p style="font-family:${titleFont};font-size:${isSw ? '13px' : '11px'};font-weight:500;color:${s.weekday};margin:8px 0 10px;letter-spacing:${isSw ? '0.12em' : '0.5px'};text-transform:uppercase">${isSw ? 'Upcoming missions' : 'Events this month'}</p>
+                ${events.length ? events.map(ev => `
                 <div style="display:flex;gap:8px;margin-bottom:8px">
                     <div style="width:2px;background:${s.eventBorder};flex-shrink:0;border-radius:1px"></div>
                     <div style="flex:1;background:${s.eventBg};border:1px solid ${s.eventBorder}33;border-radius:4px;padding:10px 12px">
                         <div style="font-family:${titleFont};font-size:${isSw ? '15px' : '14px'};font-weight:500;color:${s.eventText};letter-spacing:${isSw ? '0.04em' : 'normal'}">${escapeHtml(ev.summary || 'Event')}</div>
                         <div style="font-size:12px;color:${s.weekday};margin-top:2px">${formatEventTime(ev.start)}</div>
                     </div>
-                </div>`).join('')}
+                </div>`).join('') : `<p style="font-size:12px;color:${s.weekday};margin:0">${usingLiveEvents ? 'No events this month.' : 'Connect to load your events.'}</p>`}
             </div>
         </div>
         <div style="background:${s.navBg};border-top:1px solid ${s.navBorder};display:flex;justify-content:space-around;padding:8px 0 16px;flex-shrink:0">
@@ -208,7 +227,14 @@ function initializeGoogleAPIs() {
 }
 
 async function handleAuthCallback(res) {
-    if (res.error) { statusMsg.textContent = 'Could not connect.'; return; }
+    if (res.error) {
+        if (res.error === 'access_denied') {
+            statusMsg.textContent = 'Google blocked sign-in. Add your Gmail as a Test user in Google Cloud → OAuth consent screen.';
+        } else {
+            statusMsg.textContent = `Could not connect (${res.error}).`;
+        }
+        return;
+    }
     authBtn.textContent = 'Disconnect';
     await fetchEvents();
 }
@@ -216,16 +242,27 @@ async function handleAuthCallback(res) {
 async function fetchEvents() {
     if (!gapiInited) return;
     statusMsg.textContent = 'Loading…';
+    const { timeMin, timeMax } = monthRange();
     try {
         const res = await gapi.client.calendar.events.list({
-            calendarId: 'primary', timeMin: new Date().toISOString(),
-            showDeleted: false, singleEvents: true, maxResults: 8, orderBy: 'startTime',
+            calendarId: 'primary',
+            timeMin,
+            timeMax,
+            showDeleted: false,
+            singleEvents: true,
+            maxResults: 20,
+            orderBy: 'startTime',
         });
-        liveEvents = res.result.items?.length ? res.result.items : SAMPLE_EVENTS;
-        usingLiveEvents = !!res.result.items?.length;
-        statusMsg.textContent = usingLiveEvents ? 'Your real events.' : 'No upcoming events — samples shown.';
+        liveEvents = res.result.items?.length ? res.result.items : null;
+        usingLiveEvents = true;
+        const monthName = viewDate.toLocaleDateString('en-US', { month: 'long' });
+        statusMsg.textContent = liveEvents
+            ? `Your events in ${monthName}.`
+            : `No events in ${monthName} — samples shown.`;
+        if (!liveEvents) liveEvents = SAMPLE_EVENTS;
     } catch {
         liveEvents = SAMPLE_EVENTS;
+        usingLiveEvents = false;
         statusMsg.textContent = 'Error loading events.';
     }
     renderPhone();
@@ -240,9 +277,18 @@ authBtn.addEventListener('click', () => {
         gapi.client.setToken(null);
         authBtn.textContent = 'Connect';
         liveEvents = null;
+        usingLiveEvents = false;
+        viewDate = new Date();
         statusMsg.textContent = STYLE_QUIPS[activeStyleId] || '';
         renderPhone();
     }
+});
+
+phoneScreen?.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    if (btn.dataset.action === 'prev-month') changeMonth(-1);
+    if (btn.dataset.action === 'next-month') changeMonth(1);
 });
 
 window.addEventListener('DOMContentLoaded', () => {
