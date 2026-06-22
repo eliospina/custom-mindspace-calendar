@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <title>Mindspace Calendar · Prototype 2</title>
-    <meta name="description" content="Prototype 2 — mobile calendar personalization. Pick a style or your own image. Open-source proposal for Google Calendar.">
-    <meta name="theme-color" content="#1a73e8">
-    <meta property="og:title" content="Mindspace Calendar · Prototype 2">
-    <meta property="og:description" content="Mobile calendar personalization — swappable styles and custom month images.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+    <title>Mindspace Calendar</title>
+    <meta name="description" content="Personalize your Google Calendar with swappable skins. Pick a theme, connect your account, browse your schedule.">
+    <meta name="theme-color" content="#fafafa">
+    <meta property="og:title" content="Mindspace Calendar">
+    <meta property="og:description" content="Swappable calendar skins for Google Calendar mobile.">
     <meta property="og:type" content="website">
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,113 +16,228 @@
     <style>
         * { box-sizing: border-box; }
         body {
-            font-family: 'Roboto', system-ui, sans-serif;
-            background: #e8eaed;
+            font-family: 'Google Sans', Roboto, system-ui, sans-serif;
+            background: #f4f4f5;
             margin: 0;
             min-height: 100dvh;
+            color: #18181b;
+            transition: background 0.25s;
         }
+        body.is-connected {
+            background: #09090b;
+        }
+        .app-shell { max-width: 420px; margin: 0 auto; }
+
+        .app-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: max(12px, env(safe-area-inset-top)) 16px 8px;
+        }
+        .brand-title {
+            font-size: 17px;
+            font-weight: 500;
+            letter-spacing: -0.02em;
+            margin: 0;
+            line-height: 1.2;
+        }
+        .brand-sub {
+            font-size: 12px;
+            color: #71717a;
+            margin: 2px 0 0;
+            line-height: 1.3;
+        }
+        body.is-connected .brand-sub { color: #a1a1aa; }
+        body.is-connected .brand-title { color: #fafafa; }
+
+        .sync-dot {
+            display: none;
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #22c55e;
+            box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.25);
+            flex-shrink: 0;
+        }
+        body.is-connected .sync-dot { display: inline-block; }
+
+        #auth-btn {
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 500;
+            padding: 7px 14px;
+            border-radius: 999px;
+            border: none;
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+            background: #18181b;
+            color: #fff;
+            flex-shrink: 0;
+        }
+        #auth-btn:hover { background: #27272a; }
+        body.is-connected #auth-btn {
+            background: transparent;
+            color: #a1a1aa;
+            border: 1px solid #3f3f46;
+        }
+        body.is-connected #auth-btn:hover {
+            color: #fafafa;
+            border-color: #52525b;
+        }
+
+        .style-bar {
+            padding: 0 16px 10px;
+        }
+        body.is-connected .style-bar {
+            padding-bottom: 8px;
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: linear-gradient(to bottom, #09090b 70%, transparent);
+        }
+        #style-picker {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 2px;
+            scrollbar-width: none;
+        }
+        #style-picker::-webkit-scrollbar { display: none; }
+
+        .style-chip {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1.5px solid #e4e4e7;
+            border-radius: 999px;
+            padding: 5px 12px 5px 5px;
+            cursor: pointer;
+            background: #fff;
+            transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+        }
+        .style-chip:active { transform: scale(0.97); }
+        .style-chip.selected {
+            border-color: #18181b;
+            box-shadow: 0 0 0 1px #18181b;
+        }
+        body.is-connected .style-chip {
+            background: #18181b;
+            border-color: #3f3f46;
+            color: #fafafa;
+        }
+        body.is-connected .style-chip.selected {
+            border-color: #fafafa;
+            box-shadow: 0 0 0 1px #fafafa;
+        }
+        .style-chip-swatch {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .style-chip-label {
+            font-size: 12px;
+            font-weight: 500;
+            white-space: nowrap;
+            color: #27272a;
+        }
+        body.is-connected .style-chip-label { color: #fafafa; }
+
+        .phone-stage {
+            padding: 0 12px;
+            transition: padding 0.25s;
+        }
+        body.is-connected .phone-stage { padding: 0 8px; }
+
         .phone {
             width: 100%;
             max-width: 390px;
-            height: 780px;
-            max-height: calc(100dvh - 180px);
+            height: 720px;
+            max-height: calc(100dvh - 168px);
             background: #000;
             border-radius: 44px;
-            padding: 12px;
-            box-shadow: 0 25px 80px rgba(0,0,0,0.35), inset 0 0 0 2px #333;
+            padding: 10px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.18), inset 0 0 0 1.5px #3f3f46;
             margin: 0 auto;
+            transition: max-height 0.25s, box-shadow 0.25s;
+        }
+        body.is-connected .phone {
+            max-height: calc(100dvh - 108px);
+            box-shadow: 0 24px 80px rgba(0,0,0,0.55), inset 0 0 0 1.5px #52525b;
         }
         .phone-inner {
             width: 100%;
             height: 100%;
-            border-radius: 34px;
+            border-radius: 36px;
             overflow: hidden;
             display: flex;
             flex-direction: column;
             position: relative;
+            background: #000;
         }
         .phone-notch {
             position: absolute;
             top: 0;
             left: 50%;
             transform: translateX(-50%);
-            width: 120px;
-            height: 28px;
+            width: 108px;
+            height: 26px;
             background: #000;
-            border-radius: 0 0 18px 18px;
+            border-radius: 0 0 16px 16px;
             z-index: 30;
         }
-        .style-chip {
-            flex-shrink: 0;
-            width: 72px;
-            border: 2px solid transparent;
-            border-radius: 8px;
-            padding: 6px;
-            cursor: pointer;
-            background: #fff;
-            transition: transform 0.15s, border-color 0.15s;
-        }
-        .style-chip:active { transform: scale(0.95); }
-        .style-chip.selected { border-color: #1a73e8; }
-        .style-chip-swatch {
-            height: 44px;
-            border-radius: 4px;
-            margin-bottom: 4px;
-        }
-        .google-blob-hero {
-            background: linear-gradient(135deg, #aed581, #fff176, #ff8a65, #4fc3f7);
-            position: relative;
-            overflow: hidden;
-        }
-        .google-blob-hero::before,
-        .google-blob-hero::after {
-            content: '';
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(2px);
-        }
-        .google-blob-hero::before {
-            width: 140px; height: 140px;
-            background: #81c784;
-            top: 20px; left: -30px;
-            opacity: 0.8;
-        }
-        .google-blob-hero::after {
-            width: 100px; height: 100px;
-            background: #ffb74d;
-            top: 50px; right: 20px;
-            opacity: 0.9;
-        }
         #phone-screen { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
-        .cal-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-        .cal-scroll::-webkit-scrollbar { display: none; }
+
+        #status-msg {
+            text-align: center;
+            font-size: 12px;
+            color: #71717a;
+            padding: 10px 16px max(12px, env(safe-area-inset-bottom));
+            margin: 0;
+            min-height: 0;
+            transition: opacity 0.2s;
+        }
+        body.is-connected #status-msg {
+            color: #71717a;
+            padding-top: 6px;
+            padding-bottom: max(8px, env(safe-area-inset-bottom));
+        }
+        #status-msg:empty { display: none; }
+        #status-msg.is-error { color: #ef4444; }
     </style>
 </head>
 <body>
 
-    <div class="px-4 pt-4 pb-2 max-w-lg mx-auto">
-        <div class="flex items-center justify-between gap-3 mb-3">
-            <div>
-                <div class="flex items-center gap-2 flex-wrap">
-                    <h1 class="text-base font-medium text-gray-800" style="font-family:'Google Sans',Roboto,sans-serif">Mindspace Calendar</h1>
-                    <span class="text-[10px] font-semibold uppercase tracking-wide text-white bg-[#1a73e8] px-2 py-0.5 rounded-full">Prototype 2</span>
+    <div class="app-shell">
+        <header class="app-header">
+            <div class="flex items-center gap-2.5 min-w-0">
+                <span class="sync-dot" aria-hidden="true"></span>
+                <div class="min-w-0">
+                    <h1 class="brand-title">Mindspace</h1>
+                    <p id="header-sub" class="brand-sub">Choose your calendar skin</p>
                 </div>
-                <p class="text-xs text-gray-500">Nerd themes · Pick your calendar skin</p>
             </div>
-            <button id="auth-btn" class="text-xs font-medium text-white bg-[#1a73e8] px-3 py-1.5 rounded-full shrink-0">Connect</button>
+            <button type="button" id="auth-btn">Sign in</button>
+        </header>
+
+        <div class="style-bar">
+            <div id="style-picker"></div>
         </div>
 
-        <div id="style-picker" class="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1"></div>
-    </div>
+        <main class="phone-stage">
+            <div class="phone">
+                <div class="phone-inner">
+                    <div class="phone-notch"></div>
+                    <div id="phone-screen"></div>
+                </div>
+            </div>
+        </main>
 
-    <div class="phone mx-auto">
-        <div class="phone-inner">
-            <div class="phone-notch"></div>
-            <div id="phone-screen"></div>
-        </div>
+        <p id="status-msg" role="status" aria-live="polite"></p>
     </div>
-
-    <p id="status-msg" class="text-center text-xs text-gray-500 px-4 pb-4 max-w-lg mx-auto"></p>
 
     <script defer src="https://apis.google.com/js/api.js"></script>
     <script defer src="https://accounts.google.com/gsi/client"></script>

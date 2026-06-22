@@ -7,14 +7,6 @@ const SAMPLE_EVENTS = [
     { summary: 'Gym', start: { dateTime: todayAt(19, 0) } },
 ];
 
-const STYLE_QUIPS = {
-    minimal: 'Zero clip art. Maximum calendar.',
-    starwars: 'May the schedules be with you.',
-    tron: 'End of line.',
-    nebula: 'Cosmic vibes. Google kites not included.',
-    coder: 'git commit -m "finally, a calendar I chose"',
-};
-
 let tokenClient;
 let gapiInited = false;
 let gisInited = false;
@@ -26,8 +18,35 @@ let viewDate = new Date();
 const phoneScreen = document.getElementById('phone-screen');
 const stylePicker = document.getElementById('style-picker');
 const authBtn = document.getElementById('auth-btn');
-const fileInput = document.getElementById('file-input');
 const statusMsg = document.getElementById('status-msg');
+const headerSub = document.getElementById('header-sub');
+
+function isSignedIn() {
+    try {
+        return gapiInited && gapi.client.getToken() !== null;
+    } catch {
+        return false;
+    }
+}
+
+function setStatus(text, isError = false) {
+    if (!statusMsg) return;
+    statusMsg.textContent = text || '';
+    statusMsg.classList.toggle('is-error', !!isError);
+}
+
+function updateChrome() {
+    const connected = isSignedIn();
+    document.body.classList.toggle('is-connected', connected);
+    if (authBtn) authBtn.textContent = connected ? 'Sign out' : 'Sign in';
+    if (headerSub) {
+        const theme = CALENDAR_STYLES[activeStyleId]?.label || 'Calendar';
+        headerSub.textContent = connected ? `${theme} · Google Calendar` : 'Choose your calendar skin';
+    }
+    if (connected && statusMsg && !statusMsg.classList.contains('is-error')) {
+        setStatus('');
+    }
+}
 
 function todayAt(h, m) {
     const d = new Date();
@@ -180,7 +199,7 @@ function renderPhone() {
                         <div style="font-family:${titleFont};font-size:${isSw ? '15px' : '14px'};font-weight:500;color:${s.eventText};letter-spacing:${isSw ? '0.04em' : 'normal'}">${escapeHtml(ev.summary || 'Event')}</div>
                         <div style="font-size:12px;color:${s.weekday};margin-top:2px">${formatEventTime(ev.start)}</div>
                     </div>
-                </div>`).join('') : `<p style="font-size:12px;color:${s.weekday};margin:0">${usingLiveEvents ? 'No events this month.' : 'Connect to load your events.'}</p>`}
+                </div>`).join('') : `<p style="font-size:12px;color:${s.weekday};margin:0">${usingLiveEvents ? 'No events this month.' : 'Sign in to load your calendar.'}</p>`}
             </div>
         </div>
         <div style="background:${s.navBg};border-top:1px solid ${s.navBorder};display:flex;justify-content:space-around;padding:8px 0 16px;flex-shrink:0">
@@ -193,10 +212,9 @@ function renderPhone() {
 function renderStylePicker() {
     if (!stylePicker) return;
     stylePicker.innerHTML = Object.entries(CALENDAR_STYLES).map(([id, st]) => `
-        <button type="button" class="style-chip${id === activeStyleId ? ' selected' : ''}" data-style="${id}">
+        <button type="button" class="style-chip${id === activeStyleId ? ' selected' : ''}" data-style="${id}" aria-pressed="${id === activeStyleId}">
             <div class="style-chip-swatch" style="background:${st.swatch}"></div>
-            <div class="text-[10px] font-medium text-gray-800">${st.label}</div>
-            <div class="text-[9px] text-gray-400">${st.desc}</div>
+            <span class="style-chip-label">${st.label}</span>
         </button>`).join('');
     stylePicker.querySelectorAll('.style-chip').forEach(btn => {
         btn.addEventListener('click', () => selectStyle(btn.dataset.style));
@@ -209,13 +227,13 @@ function selectStyle(id) {
     localStorage.setItem('calendar_style', id);
     renderStylePicker();
     renderPhone();
-    statusMsg.textContent = STYLE_QUIPS[id] || '';
+    updateChrome();
 }
 
 function initializeGoogleAPIs() {
     const config = getGoogleConfig();
     if (!config) {
-        statusMsg.textContent = statusMsg.textContent || 'Sample events · Connect for real ones';
+        setStatus('Preview mode · Sign in unavailable');
         return;
     }
     if (typeof gapi === 'undefined' || typeof google === 'undefined') {
@@ -229,19 +247,20 @@ function initializeGoogleAPIs() {
 async function handleAuthCallback(res) {
     if (res.error) {
         if (res.error === 'access_denied') {
-            statusMsg.textContent = 'Google blocked sign-in. Add your Gmail as a Test user in Google Cloud → OAuth consent screen.';
+            setStatus('Sign-in blocked. Your Gmail must be on the OAuth test user list.', true);
         } else {
-            statusMsg.textContent = `Could not connect (${res.error}).`;
+            setStatus(`Could not sign in (${res.error}).`, true);
         }
+        updateChrome();
         return;
     }
-    authBtn.textContent = 'Disconnect';
+    updateChrome();
     await fetchEvents();
 }
 
 async function fetchEvents() {
     if (!gapiInited) return;
-    statusMsg.textContent = 'Loading…';
+    setStatus('Loading…');
     const { timeMin, timeMax } = monthRange();
     try {
         const res = await gapi.client.calendar.events.list({
@@ -255,31 +274,29 @@ async function fetchEvents() {
         });
         liveEvents = res.result.items?.length ? res.result.items : null;
         usingLiveEvents = true;
-        const monthName = viewDate.toLocaleDateString('en-US', { month: 'long' });
-        statusMsg.textContent = liveEvents
-            ? `Your events in ${monthName}.`
-            : `No events in ${monthName} — samples shown.`;
         if (!liveEvents) liveEvents = SAMPLE_EVENTS;
+        setStatus('');
     } catch {
         liveEvents = SAMPLE_EVENTS;
         usingLiveEvents = false;
-        statusMsg.textContent = 'Error loading events.';
+        setStatus('Could not load events.', true);
     }
+    updateChrome();
     renderPhone();
 }
 
 authBtn.addEventListener('click', () => {
-    if (!getGoogleConfig()) { statusMsg.textContent = 'Set up config.js first.'; return; }
-    if (!gapiInited || !tokenClient) { statusMsg.textContent = 'Loading…'; return; }
+    if (!getGoogleConfig()) { setStatus('Google credentials not configured.', true); return; }
+    if (!gapiInited || !tokenClient) { setStatus('Loading…'); return; }
     if (gapi.client.getToken() === null) {
         tokenClient.requestAccessToken({ prompt: 'consent' });
     } else {
         gapi.client.setToken(null);
-        authBtn.textContent = 'Connect';
         liveEvents = null;
         usingLiveEvents = false;
         viewDate = new Date();
-        statusMsg.textContent = STYLE_QUIPS[activeStyleId] || '';
+        setStatus('');
+        updateChrome();
         renderPhone();
     }
 });
@@ -298,6 +315,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
     renderStylePicker();
     renderPhone();
-    statusMsg.textContent = STYLE_QUIPS[activeStyleId] || '';
+    updateChrome();
     initializeGoogleAPIs();
 });
