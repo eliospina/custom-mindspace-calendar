@@ -23,6 +23,34 @@ const headerSub = document.getElementById('header-sub');
 const betaAccessLink = document.getElementById('beta-access');
 
 const DEFAULT_BETA_URL = 'https://github.com/eliospina/custom-mindspace-calendar/issues/new?template=beta_access.md&labels=beta-access';
+const TOKEN_STORAGE_KEY = 'mindspace_gcal_token';
+
+function saveSessionToken(token) {
+    if (token?.access_token) {
+        sessionStorage.setItem(TOKEN_STORAGE_KEY, JSON.stringify(token));
+    }
+}
+
+function loadSessionToken() {
+    try {
+        const raw = sessionStorage.getItem(TOKEN_STORAGE_KEY);
+        return raw ? JSON.parse(raw) : null;
+    } catch {
+        return null;
+    }
+}
+
+function clearSessionToken() {
+    sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+    if (gapiInited) gapi.client.setToken(null);
+}
+
+function applySessionToken() {
+    const token = loadSessionToken();
+    if (!token?.access_token || !gapiInited) return false;
+    gapi.client.setToken(token);
+    return true;
+}
 
 function getBetaAccessUrl() {
     const url = window.GOOGLE_CONFIG?.BETA_ACCESS_URL?.trim();
@@ -180,7 +208,10 @@ function renderPhone() {
     const { days, monthLabel } = getMonthGrid();
     const now = new Date();
     const isCurrentMonth = viewDate.getMonth() === now.getMonth() && viewDate.getFullYear() === now.getFullYear();
-    const events = liveEvents || (isCurrentMonth ? SAMPLE_EVENTS : []);
+    const events = usingLiveEvents
+        ? (liveEvents ?? [])
+        : (isCurrentMonth ? SAMPLE_EVENTS : []);
+    const showingSamples = !usingLiveEvents && events.length > 0;
     const monthName = monthLabel.split(' ')[0];
     const font = s.font;
     const titleFont = s.titleFont || font;
@@ -207,13 +238,13 @@ function renderPhone() {
                 </div>
             </div>
             <div style="padding:8px 16px 16px">
-                <p style="font-family:${titleFont};font-size:${isSw ? '13px' : '11px'};font-weight:500;color:${s.weekday};margin:8px 0 10px;letter-spacing:${isSw ? '0.12em' : '0.5px'};${isSw ? '' : 'text-transform:uppercase'}">${isSw ? starJediText('upcoming missions') : 'Events this month'}</p>
+                <p style="font-family:${titleFont};font-size:${isSw ? '13px' : '11px'};font-weight:500;color:${s.weekday};margin:8px 0 10px;letter-spacing:${isSw ? '0.12em' : '0.5px'};${isSw ? '' : 'text-transform:uppercase'}">${isSw ? starJediText('upcoming missions') : (showingSamples ? 'Sample preview' : 'Events this month')}</p>
                 ${events.length ? events.map(ev => `
                 <div style="display:flex;gap:8px;margin-bottom:8px">
-                    <div style="width:2px;background:${s.eventBorder};flex-shrink:0;border-radius:1px"></div>
-                    <div style="flex:1;background:${s.eventBg};border:1px solid ${s.eventBorder}33;border-radius:4px;padding:10px 12px">
+                    <div style="width:2px;background:${s.eventBorder};flex-shrink:0;border-radius:1px;${showingSamples ? 'opacity:0.5' : ''}"></div>
+                    <div style="flex:1;background:${s.eventBg};border:1px solid ${s.eventBorder}33;border-radius:4px;padding:10px 12px;${showingSamples ? 'opacity:0.85' : ''}">
                         <div style="font-family:${titleFont};font-size:${isSw ? '15px' : '14px'};font-weight:500;color:${s.eventText};letter-spacing:${isSw ? '0.04em' : 'normal'}">${isSw ? starJediText(ev.summary || 'Event') : escapeHtml(ev.summary || 'Event')}</div>
-                        <div style="font-size:12px;color:${s.weekday};margin-top:2px">${formatEventTime(ev.start)}</div>
+                        <div style="font-size:12px;color:${s.weekday};margin-top:2px">${formatEventTime(ev.start)}${showingSamples ? ' · preview' : ''}</div>
                     </div>
                 </div>`).join('') : `<p style="font-size:12px;color:${s.weekday};margin:0">${usingLiveEvents ? 'No events this month.' : 'Sign in to load your calendar.'}</p>`}
             </div>
@@ -256,20 +287,37 @@ function initializeGoogleAPIs() {
         setTimeout(initializeGoogleAPIs, 100);
         return;
     }
-    gapi.load('client', () => gapi.client.init({ apiKey: config.API_KEY, discoveryDocs: [DISCOVERY_DOC] }).then(() => { gapiInited = true; }));
-    tokenClient = google.accounts.oauth2.initTokenClient({ client_id: config.CLIENT_ID, scope: SCOPES, callback: handleAuthCallback });
+    gapi.load('client', () => {
+        gapi.client.init({ apiKey: config.API_KEY, discoveryDocs: [DISCOVERY_DOC] }).then(async () => {
+            gapiInited = true;
+            tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: config.CLIENT_ID,
+                scope: SCOPES,
+                callback: handleAuthCallback,
+            });
+            if (applySessionToken()) {
+                usingLiveEvents = true;
+                updateChrome();
+                await fetchEvents();
+            }
+        });
+    });
 }
 
 async function handleAuthCallback(res) {
     if (res.error) {
         if (res.error === 'access_denied') {
-            setStatus('Sign-in blocked — request beta access, then retry after approval.', true);
+            setStatus('Sign-in blocked — request an invite, then retry after approval.', true);
             if (betaAccessLink) betaAccessLink.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         } else {
             setStatus(`Could not sign in (${res.error}).`, true);
         }
         updateChrome();
         return;
+    }
+    if (res.access_token) {
+        gapi.client.setToken(res);
+        saveSessionToken(res);
     }
     updateChrome();
     await fetchEvents();
@@ -289,14 +337,18 @@ async function fetchEvents() {
             maxResults: 20,
             orderBy: 'startTime',
         });
-        liveEvents = res.result.items?.length ? res.result.items : null;
+        liveEvents = res.result.items ?? [];
         usingLiveEvents = true;
-        if (!liveEvents) liveEvents = SAMPLE_EVENTS;
         setStatus('');
     } catch {
-        liveEvents = SAMPLE_EVENTS;
+        if (loadSessionToken()) {
+            clearSessionToken();
+            setStatus('Session expired — sign in again.', true);
+        } else {
+            setStatus('Could not load events.', true);
+        }
+        liveEvents = null;
         usingLiveEvents = false;
-        setStatus('Could not load events.', true);
     }
     updateChrome();
     renderPhone();
@@ -306,9 +358,9 @@ authBtn.addEventListener('click', () => {
     if (!getGoogleConfig()) { setStatus('Google credentials not configured.', true); return; }
     if (!gapiInited || !tokenClient) { setStatus('Loading…'); return; }
     if (gapi.client.getToken() === null) {
-        tokenClient.requestAccessToken({ prompt: 'consent' });
+        tokenClient.requestAccessToken({ prompt: loadSessionToken() ? '' : 'consent' });
     } else {
-        gapi.client.setToken(null);
+        clearSessionToken();
         liveEvents = null;
         usingLiveEvents = false;
         viewDate = new Date();

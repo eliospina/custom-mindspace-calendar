@@ -9,8 +9,10 @@
     <meta property="og:title" content="Mindspace Calendar — Your calendar, your aesthetic">
     <meta property="og:description" content="Five beautiful calendar skins. Same Google Calendar data. An open proposal for user-chosen visual identity.">
     <meta property="og:image" content="https://raw.githubusercontent.com/eliospina/custom-mindspace-calendar/main/docs/theme-starwars.png">
-    <meta property="og:type" content="website">
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Mindspace">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
     <link href="https://fonts.cdnfonts.com/css/star-jedi" rel="stylesheet">
@@ -116,6 +118,7 @@
             line-height: 1.4;
         }
         body.is-connected .auth-hint { display: none; }
+        body.is-connected .auth-hint a { color: #71717a; }
 
         .style-bar {
             padding: 0 16px 10px;
@@ -252,12 +255,12 @@
                 </div>
             </div>
             <div class="auth-actions">
-                <a id="beta-access" href="#">Request access</a>
+                <a id="beta-access" href="#" target="_blank" rel="noopener">Request invite</a>
                 <button type="button" id="auth-btn">Sign in</button>
             </div>
         </header>
 
-        <p class="auth-hint">All skins work without sign-in · Sign in loads your Google Calendar (beta)</p>
+        <p class="auth-hint">Skins work without sign-in · Sign in = read-only Google Calendar · <a id="privacy-link" href="privacy.html" style="color:inherit">Privacy</a></p>
 
         <div class="style-bar">
             <div id="style-picker"></div>

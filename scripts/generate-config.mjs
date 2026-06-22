@@ -24,7 +24,7 @@ if (configContent) {
     console.log('config.example.js usado como fallback.');
 }
 
-for (const file of ['index.html', 'app.js', 'styles.js']) {
+for (const file of ['index.html', 'app.js', 'styles.js', 'manifest.json', 'privacy.html']) {
     copyFileSync(file, `public/${file}`);
 }
 
