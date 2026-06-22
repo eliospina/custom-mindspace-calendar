@@ -1,37 +1,75 @@
-# Mindspace Calendar · Prototype 2
+# Mindspace Calendar
 
-**Open-source UX proposal for Google Calendar mobile** — let users choose how their calendar looks instead of forcing auto-generated month illustrations.
+**Your calendar. Your aesthetic.** An open-source proposal showing what Google Calendar mobile could look like if users chose their own visual identity — instead of inheriting clip art, kites, and a UI frozen in time.
 
 [![Live demo](https://img.shields.io/badge/demo-live-1a73e8?style=flat-square)](https://custom-mindspace-calendar.vercel.app)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 
-## The problem
+→ **Try it now:** [custom-mindspace-calendar.vercel.app](https://custom-mindspace-calendar.vercel.app)
 
-Google Calendar on mobile assigns a decorative month banner (kites, blobs, clip art) with **no way to opt out or pick your own look**. The calendar works; the visual identity does not belong to the user.
+---
 
-## The proposal
+## Five skins. Same Google Calendar data.
 
-Give people **swappable calendar skins** — same events, same Google Calendar data, different aesthetic. This prototype shows what that could feel like on a phone-sized mockup.
+Pick a theme, sign in, browse months — your real events, reimagined.
+
+| Minimal | Star Wars | Tron |
+|:---:|:---:|:---:|
+| ![Minimal theme](docs/theme-minimal.png) | ![Star Wars theme](docs/theme-starwars.png) | ![Tron theme](docs/theme-tron.png) |
+
+| Nebula | Code Nerd |
+|:---:|:---:|
+| ![Nebula theme](docs/theme-nebula.png) | ![Code Nerd theme](docs/theme-coder.png) |
+
+*Clean white. Space opera. Neon grid. Cosmic gradients. Terminal dark. Zero elementary-school energy.*
+
+---
+
+## The problem Google won't let you fix
+
+Google Calendar on mobile assigns a decorative month banner — kites, blobs, seasonal clip art — with **no way to opt out or choose your own look**. The scheduling works. The visual identity does not belong to you.
+
+This project is a working counter-proposal: **swappable calendar skins** powered by the same Google Calendar API, rendered in a phone-sized interface that feels like a product, not a wireframe.
+
+---
+
+## A fossil with fresh paint
+
+Google Calendar's visual history has three distinct eras — and the experience users live with today is a stack of decisions from almost a decade ago:
+
+### 2017 — The last real redesign (9 years ago)
+
+In October **2017**, Google shipped the last major structural redesign of Calendar for desktop: **Material Design 2**. Rounded grid cells, the floating **+** button, *Product Sans* typography. The skeleton most people still navigate today was born here.
+
+### 2021 — Material You, same bones (5 years ago)
+
+In **2021**, Google applied **Material You (Material Design 3)** — softer pastels, rounder buttons, official dark mode. A refresh, not a rebuild. The layout, icons, and interaction model stayed rooted in 2017.
+
+### 2014 — OAuth, still waiting in the lobby
+
+Meanwhile, the grey OAuth consent screen — the gate between your app and a user's calendar — **hasn't meaningfully moved since ~2014**. Google separated the aesthetics of its products from the aesthetics of its security layer. The calendar got a 2021 coat of paint; the auth pipeline did not.
+
+> *It's ironic that in the era of generative AI and edge computing, developers are still forced to manually copy-paste text strings into environments, praying that an opaque infrastructure from 2014 decides to recognize them. If AI can generate entire applications in seconds, Google's auth pipeline shouldn't be a black box that requires manual prophecy to debug. We need smarter tooling to bridge the cloud console with runtime environments — because this static, manual flow belongs in a museum.*
+
+Mindspace Calendar exists at that intersection: **a modern, user-chosen interface** running on **2014-era OAuth plumbing**. The contrast is the point.
+
+---
 
 ## Live demo
 
-**https://custom-mindspace-calendar.vercel.app**
+1. Pick a skin in the theme bar.
+2. Use **‹ ›** to browse past and future months.
+3. Tap **Sign in** to load your real Google Calendar events (read-only).
+4. Switch themes and watch the same schedule transform.
 
-![Mindspace Calendar Prototype 2 — Star Wars theme](docs/screenshot-starwars.png)
+### Want to test Sign in?
 
-1. Pick a theme in the carousel above the phone mockup.
-2. Use **‹ ›** in the phone header to browse past and future months.
-3. Optionally tap **Connect** to load your real Google Calendar events (read-only).
-4. Compare how the same month reads in each skin.
+Skins work without signing in. **Sign in** requires your Gmail on the OAuth allowlist (Testing mode).
 
-### Want to test Connect with your Google account?
+- Open an [issue](https://github.com/eliospina/custom-mindspace-calendar/issues/new/choose) with your Gmail, or
+- Join the beta Google Group *(link coming soon)*.
 
-Themes work without signing in. **Connect** requires your Gmail on the OAuth allowlist (Testing mode).
-
-- **Quick path:** open an issue on this repo with your Gmail and the maintainer will add you as a test user.
-- **Self-serve path (recommended for many testers):** join the beta Google Group *(link coming soon — create `mindspace-beta@googlegroups.com`, add it under OAuth → Test users, then paste the join URL here)*.
-
-Until the group exists, email **ospieli85@gmail.com** or file a [theme/access request issue](https://github.com/eliospina/custom-mindspace-calendar/issues/new/choose).
+---
 
 ## Themes
 
@@ -43,102 +81,57 @@ Until the group exists, email **ospieli85@gmail.com** or file a [theme/access re
 | **Nebula** | Cosmic purple / pink gradients |
 | **Code Nerd** | Terminal / GitHub dark |
 
-## Project structure
+---
+
+## For developers
+
+Vanilla HTML, CSS, and JavaScript — no bundler. Tailwind on the outer shell only; the phone calendar is inline-styled per theme.
 
 ```
-├── index.html          # Landing + phone mockup shell
-├── app.js              # Calendar renderer, Google OAuth, style switching
-├── styles.js           # Theme definitions (CALENDAR_STYLES)
-├── config.example.js   # Google credentials template (copy → config.js)
-├── scripts/
-│   └── generate-config.mjs   # Vercel build: copies assets → public/
-├── vercel.json         # Build command + output directory
-└── public/             # Build output (generated, not committed)
+├── index.html              # App shell + phone frame
+├── app.js                  # Renderer, OAuth, month navigation
+├── styles.js               # Theme definitions
+├── config.example.js       # Google credentials template
+├── scripts/generate-config.mjs
+└── vercel.json
 ```
 
-Vanilla HTML/CSS/JS — no bundler, no framework. Tailwind via CDN for the outer chrome only; the phone calendar is inline-styled per theme.
-
-## Run locally
+### Run locally
 
 ```bash
 cp config.example.js config.js
-# Edit config.js with your Google Cloud credentials
+# Add your Google Cloud credentials
 npx serve . -l 3000
 ```
 
-Open `http://localhost:3000`. OAuth requires HTTP — opening `index.html` as a file will not work.
-
 ### Google Cloud setup
 
-1. Create a project in [Google Cloud Console](https://console.cloud.google.com/).
-2. Enable **Google Calendar API**.
-3. Create credentials:
-   - **API key** — restrict to Calendar API + your HTTP referrers.
-   - **OAuth 2.0 Client ID** (Web) — add authorized JavaScript origins:
-     - `http://localhost:3000` (or your local port)
-     - `https://your-production-domain.vercel.app`
-4. Paste both values into `config.js`.
+1. Enable **Google Calendar API** in [Google Cloud Console](https://console.cloud.google.com/).
+2. Create an **API key** (restrict to Calendar API + HTTP referrers).
+3. Create an **OAuth 2.0 Web Client ID** with authorized origins:
+   - `http://localhost:3000`
+   - `https://custom-mindspace-calendar.vercel.app`
+4. Scope: `calendar.events.readonly` — events only, no write access.
 
-Scope used: `calendar.events.readonly` — events only, no write access.
+### Fix “Access blocked” (Error 403)
 
-### Connect from your phone (fix “Access blocked” / Error 403)
+Keep the app in **Testing** mode and add each Gmail under **OAuth consent screen → Test users**. Confirm the Vercel URL is in authorized JavaScript origins and API key referrers. See [Google's testing guide](https://console.cloud.google.com/auth/audience?project=custom-mindspace-calendar).
 
-Google blocks sign-in when the OAuth app is in **Testing** mode and your Gmail is not on the allowlist.
+### Deploy on Vercel
 
-1. Open [Google Cloud Console → OAuth consent screen](https://console.cloud.google.com/apis/credentials/consent).
-2. Select the **same project** as your OAuth Client ID.
-3. Under **Test users**, click **Add users** and add every Gmail that should connect (e.g. `ospieli85@gmail.com`).
-4. Save, wait ~1 minute, then retry **Connect** on your phone.
+Every push to `main` auto-deploys. Set `GOOGLE_CLIENT_ID` and `GOOGLE_API_KEY` in the Vercel dashboard.
 
-Also confirm **Credentials → your OAuth 2.0 Client ID (Web)** includes this origin:
-
-```
-https://custom-mindspace-calendar.vercel.app
-```
-
-And your **API key** HTTP referrers include the same URL (or `https://*.vercel.app/*` for preview deploys).
-
-> **Note:** You do **not** need Google’s full app verification for a personal demo — Testing mode + test users is enough for up to 100 accounts.
-
-### Let testers join without adding emails one by one
-
-Google has **no public API** to auto-add OAuth test users. The closest workflow:
-
-1. Create a [Google Group](https://groups.google.com) (e.g. `mindspace-beta@googlegroups.com`).
-2. In **OAuth consent screen → Test users**, add the **group email** (not just individuals).
-3. Enable **“Anyone can ask to join”** or share a join link on your README / demo page.
-4. Approve join requests — approved members can use **Connect** immediately.
-
-Limit: **100 users total** in Testing mode (individuals + group members count toward the cap).
-
-For open public access without an allowlist, the app must be **In production** and pass Google’s OAuth verification (privacy policy, scope review — often weeks).
-
-## Deploy on Vercel
-
-The project is linked to GitHub — **every push to `main` triggers a production deploy** on Vercel.
-
-```bash
-vercel
-```
-
-Set environment variables in the Vercel dashboard:
-
-| Variable | Value |
-|----------|-------|
-| `GOOGLE_CLIENT_ID` | OAuth Web client ID |
-| `GOOGLE_API_KEY` | Restricted API key |
-
-The build script writes `public/config.js` from those vars and copies static assets into `public/` for deployment.
+---
 
 ## Who this is for
 
-- **Google Calendar PMs / designers** — a concrete “what if users could choose?” reference.
-- **Developers** — a minimal forkable demo of Calendar API + theme switching.
-- **Anyone annoyed by the kite** — you are not alone.
+- **Google Calendar PMs & designers** — a concrete “what if users could choose?” reference, with screenshots ready to share.
+- **Developers** — a minimal, forkable Calendar API + theme-switching demo.
+- **Anyone tired of the kite** — you are not alone.
 
 ## Disclaimer
 
-Not affiliated with Google, Lucasfilm, Disney, or Tron. Fan-style themes are for demonstration only. This is a personal UX critique packaged as working code, not a Google product.
+Not affiliated with Google, Lucasfilm, Disney, or Tron. Fan-style themes are for demonstration. A personal UX critique packaged as working code — not a Google product.
 
 ## License
 
