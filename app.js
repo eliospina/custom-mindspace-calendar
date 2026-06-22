@@ -78,6 +78,11 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// Star Jedi maps lowercase input to the correct logo-style glyphs; uppercase breaks (U→K, O→N, etc.)
+function starJediText(text) {
+    return escapeHtml(String(text ?? '').toLowerCase());
+}
+
 function formatEventTime(start) {
     if (!start.dateTime) return 'All day';
     return new Date(start.dateTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
@@ -139,9 +144,9 @@ function renderHero(type, s, monthLabel) {
         return `<div style="height:128px;position:relative;overflow:hidden;background:#000;flex-shrink:0">
             ${starDots()}
             <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,0.1) 0%,rgba(0,0,0,0.9) 100%)"></div>
-            <div style="position:absolute;top:8px;left:0;right:0;text-align:center;font-family:'Star Jedi',sans-serif;font-size:7px;color:#FFE81F;opacity:0.55;letter-spacing:0.12em;padding:0 12px;line-height:1.4">A long time ago in a calendar far, far away...</div>
+            <div style="position:absolute;top:8px;left:0;right:0;text-align:center;font-family:'Star Jedi',sans-serif;font-size:7px;color:#FFE81F;opacity:0.55;letter-spacing:0.12em;padding:0 12px;line-height:1.4">a long time ago in a calendar far, far away...</div>
             <div style="position:absolute;bottom:10px;left:0;right:0;padding:0 16px 4px;text-align:center;transform:perspective(260px) rotateX(24deg);transform-origin:center bottom">
-                <div style="font-family:'Star Jedi',sans-serif;font-size:20px;color:#FFE81F;letter-spacing:0.06em;line-height:1.45;text-shadow:0 0 14px rgba(255,232,31,0.65),0 0 4px rgba(255,232,31,0.9)">${safe.toUpperCase()}</div>
+                <div style="font-family:'Star Jedi',sans-serif;font-size:20px;color:#FFE81F;letter-spacing:0.06em;line-height:1.45;text-shadow:0 0 14px rgba(255,232,31,0.65),0 0 4px rgba(255,232,31,0.9)">${starJediText(monthLabel)}</div>
             </div>
         </div>`;
     case 'tron':
@@ -185,7 +190,7 @@ function renderPhone() {
     <div style="display:flex;flex-direction:column;height:100%;position:relative;font-family:${font}">
         <div style="background:${s.appBar};color:${s.appBarText};padding:36px 16px 10px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;border-bottom:1px solid ${s.navBorder}">
             <button type="button" data-action="prev-month" style="background:none;border:none;color:${s.appBarText};font-size:22px;padding:4px 8px;line-height:1" aria-label="Previous month">‹</button>
-            <span style="font-family:${titleFont};font-size:${isSw ? '20px' : '18px'};letter-spacing:${isSw ? '0.06em' : 'normal'};text-shadow:${isSw ? '0 0 8px rgba(255,232,31,0.5)' : 'none'}">${monthName.toUpperCase()}</span>
+            <span style="font-family:${titleFont};font-size:${isSw ? '20px' : '18px'};letter-spacing:${isSw ? '0.06em' : 'normal'};text-shadow:${isSw ? '0 0 8px rgba(255,232,31,0.5)' : 'none'}">${isSw ? starJediText(monthName) : escapeHtml(monthName)}</span>
             <button type="button" data-action="next-month" style="background:none;border:none;color:${s.appBarText};font-size:22px;padding:4px 8px;line-height:1" aria-label="Next month">›</button>
         </div>
         ${renderHero(s.heroType, s, monthLabel)}
@@ -202,12 +207,12 @@ function renderPhone() {
                 </div>
             </div>
             <div style="padding:8px 16px 16px">
-                <p style="font-family:${titleFont};font-size:${isSw ? '13px' : '11px'};font-weight:500;color:${s.weekday};margin:8px 0 10px;letter-spacing:${isSw ? '0.12em' : '0.5px'};text-transform:uppercase">${isSw ? 'Upcoming missions' : 'Events this month'}</p>
+                <p style="font-family:${titleFont};font-size:${isSw ? '13px' : '11px'};font-weight:500;color:${s.weekday};margin:8px 0 10px;letter-spacing:${isSw ? '0.12em' : '0.5px'};${isSw ? '' : 'text-transform:uppercase'}">${isSw ? starJediText('upcoming missions') : 'Events this month'}</p>
                 ${events.length ? events.map(ev => `
                 <div style="display:flex;gap:8px;margin-bottom:8px">
                     <div style="width:2px;background:${s.eventBorder};flex-shrink:0;border-radius:1px"></div>
                     <div style="flex:1;background:${s.eventBg};border:1px solid ${s.eventBorder}33;border-radius:4px;padding:10px 12px">
-                        <div style="font-family:${titleFont};font-size:${isSw ? '15px' : '14px'};font-weight:500;color:${s.eventText};letter-spacing:${isSw ? '0.04em' : 'normal'}">${escapeHtml(ev.summary || 'Event')}</div>
+                        <div style="font-family:${titleFont};font-size:${isSw ? '15px' : '14px'};font-weight:500;color:${s.eventText};letter-spacing:${isSw ? '0.04em' : 'normal'}">${isSw ? starJediText(ev.summary || 'Event') : escapeHtml(ev.summary || 'Event')}</div>
                         <div style="font-size:12px;color:${s.weekday};margin-top:2px">${formatEventTime(ev.start)}</div>
                     </div>
                 </div>`).join('') : `<p style="font-size:12px;color:${s.weekday};margin:0">${usingLiveEvents ? 'No events this month.' : 'Sign in to load your calendar.'}</p>`}
