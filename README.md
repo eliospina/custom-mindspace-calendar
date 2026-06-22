@@ -17,6 +17,8 @@ Give people **swappable calendar skins** — same events, same Google Calendar d
 
 **https://custom-mindspace-calendar.vercel.app**
 
+![Mindspace Calendar Prototype 2 — Star Wars theme](docs/screenshot-starwars.png)
+
 1. Pick a theme in the carousel above the phone mockup.
 2. Optionally tap **Connect** to load your real Google Calendar events (read-only).
 3. Compare how the same month reads in each skin.
@@ -70,6 +72,8 @@ Open `http://localhost:3000`. OAuth requires HTTP — opening `index.html` as a 
 Scope used: `calendar.events.readonly` — events only, no write access.
 
 ## Deploy on Vercel
+
+The project is linked to GitHub — **every push to `main` triggers a production deploy** on Vercel.
 
 ```bash
 vercel
